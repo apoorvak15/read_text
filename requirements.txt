@@ -1,0 +1,9 @@
+numpy
+pandas
+matplotlib
+seaborn
+opencv-python
+easyocr
+fastapi
+uvicorn
+python-multipart

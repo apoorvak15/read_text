@@ -4,7 +4,7 @@ import cv2
 import re
 
 # Replace 'en' with the language code you want to use (e.g., 'en' for English)
-reader = easyocr.Reader(['en'])
+reader = easyocr.Reader(['en'], model_storage_directory=".", download_enabled=False)
 
 # Replace 'your_image_path.jpg' with the path to your image file
 image_path = 'input_files/image.jpg'
@@ -33,3 +33,5 @@ plt.show()
 # Print the recognized text
 for (bbox, text, prob) in results:
     print(f"Text: {text}, Probability: {prob:.2f}")
+
+print("Finished!", flush=True)
