@@ -1,1 +1,45 @@
-__pycache__/*
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+*.env/
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# PyCharm files
+*.iml
+.idea
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Sublime Text
+*.sublime-*
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# Pytest
+pytest_cache/
+
+# Coverage directory
+.coverage
+htmlcov/
+
+# Translations
+*.mo
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
