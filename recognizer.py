@@ -180,6 +180,25 @@ class Recognizer():
         )
         
     def shape_detection(self, image, template, method="cv.TM_CCOEFF"):
+        """Detects shapes from template images
+
+        Parameters
+        ----------
+        image : cv2.Image
+            Base image where detection is done
+        template : cv2.Image
+            Template to be searched in base image
+        method : str, optional
+            Template matching algorithm of cv2, by default "cv2.TM_CCOEFF"
+
+        Returns
+        -------
+        results : dict
+            Dict of results
+
+        image : cv.image
+            Image with bounding boxes
+        """
         
         img = image.copy()
         w, h = template.shape[::-1]
