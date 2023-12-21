@@ -73,14 +73,8 @@ class Recognizer():
         image : cv.image
             Image with bounding boxes
         """
-        # Read the grayscale image
-        image = cv.imread(image_path, cv.IMREAD_GRAYSCALE)
-
-        # Convert the grayscale image to color (BGR)
-        color_image = cv.cvtColor(image, cv.COLOR_GRAY2BGR)
-
         # Perform text detection
-        results = self.reader.readtext(color_image)
+        results = self.reader.readtext(image)
 
         # Annotate the image with color bounding boxes and text
         for (bbox, text, prob) in results:
@@ -89,12 +83,12 @@ class Recognizer():
             bottom_right = tuple(map(int, bottom_right))
 
             # Draw a color bounding box
-            cv.rectangle(color_image, top_left, bottom_right, (0, 255, 0), 2)
+            cv.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
 
             # Draw color text
-            cv.putText(color_image, text, top_left, cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+            cv.putText(image, text, top_left, cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
-        return results, color_image
+        return results, image
 
     def read_text_from_image_file(self, image_filepath):
         """reads text from image provided as filepath
