@@ -29,7 +29,8 @@ class Recognizer():
         ----------
         image_path : str
             Filepath to image
-
+        grayscale: bool, Optional
+            If True, image is read as grayscale, by default False
         Returns
         -------
         cv.Image
@@ -72,16 +73,28 @@ class Recognizer():
         image : cv.image
             Image with bounding boxes
         """
-        results = self.reader.readtext(image)
+        # Read the grayscale image
+        image = cv.imread(image_path, cv.IMREAD_GRAYSCALE)
 
+        # Convert the grayscale image to color (BGR)
+        color_image = cv.cvtColor(image, cv.COLOR_GRAY2BGR)
+
+        # Perform text detection
+        results = self.reader.readtext(color_image)
+
+        # Annotate the image with color bounding boxes and text
         for (bbox, text, prob) in results:
             (top_left, top_right, bottom_right, bottom_left) = bbox
             top_left = tuple(map(int, top_left))
             bottom_right = tuple(map(int, bottom_right))
-            cv.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
-            cv.putText(image, text, top_left, cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
-        return results, image
+            # Draw a color bounding box
+            cv.rectangle(color_image, top_left, bottom_right, (0, 255, 0), 2)
+
+            # Draw color text
+            cv.putText(color_image, text, top_left, cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+
+        return results, color_image
 
     def read_text_from_image_file(self, image_filepath):
         """reads text from image provided as filepath
@@ -100,7 +113,10 @@ class Recognizer():
             Image with bounding boxes
         """
         return self.read_text_from_image(
-            image=Recognizer.read_image(image_filepath)
+            image=Recognizer.read_image(
+                image_filepath,
+                grayscale=True
+                )
         )
 
     def read_text_in_video_capture(self, video_capture):
@@ -170,6 +186,7 @@ class Recognizer():
         )
         
     def shape_detection(self, image, template, method="cv.TM_CCOEFF"):
+        
         img = image.copy()
         w, h = template.shape[::-1]
         result = cv.matchTemplate(img, template, eval(method))
@@ -190,16 +207,16 @@ if __name__=="__main__":
     recog = Recognizer()
 
     # Test: image
-    # image_path = 'input_files/image.jpg'
-    # results, image = recog.read_text_from_image_file(image_path)
+    image_path = 'input_files/image.jpg'
+    results, image = recog.read_text_from_image_file(image_path)
 
-    # plt.imshow(cv.cvtColor(image, cv.COLOR_BGR2RGB))
-    # plt.axis('off')
-    # plt.show()
+    plt.imshow(cv.cvtColor(image, cv.COLOR_BGR2RGB))
+    plt.axis('off')
+    plt.show()
 
-    # # Print the recognized text
-    # for (bbox, text, prob) in results:
-    #     print(f"Text: {text}, Probability: {prob:.2f}")
+    # Print the recognized text
+    for (bbox, text, prob) in results:
+        print(f"Text: {text}, Probability: {prob:.2f}")
 
     # Test: video
     # video_path = "input_files/video1.mp4"
@@ -207,26 +224,26 @@ if __name__=="__main__":
     
     
     # Test: Template matching
-    image_path = 'input_files/image.jpg'
-    template_path = 'input_files/arrow_temp.jpg'
+    # image_path = 'input_files/image.jpg'
+    # template_path = 'input_files/arrow_temp.jpg'
     
-    methods = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
-            'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
+    # methods = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
+    #         'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
     
-    for meth in methods:
-        method = meth
-        # Apply template Matching
-        result, image = recog.shape_detection(
-            image=Recognizer.read_image(image_path, grayscale=True),
-            template=Recognizer.read_image(template_path, grayscale=True),
-            method=method
-        )
+    # for meth in methods:
+    #     method = meth
+    #     # Apply template Matching
+    #     result, image = recog.shape_detection(
+    #         image=Recognizer.read_image(image_path, grayscale=True),
+    #         template=Recognizer.read_image(template_path, grayscale=True),
+    #         method=method
+    #     )
 
-        plt.subplot(121),plt.imshow(result, cmap='gray')
-        plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
-        plt.subplot(122),plt.imshow(image, cmap='gray')
-        plt.title('Detected Point'), plt.xticks([]), plt.yticks([])
-        plt.suptitle(meth)
-        plt.show()
+    #     plt.subplot(121),plt.imshow(result, cmap='gray')
+    #     plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
+    #     plt.subplot(122),plt.imshow(image, cmap='gray')
+    #     plt.title('Detected Point'), plt.xticks([]), plt.yticks([])
+    #     plt.suptitle(meth)
+    #     plt.show()
     
     
