@@ -1,6 +1,6 @@
 import easyocr
 import matplotlib.pyplot as plt
-import cv2
+import cv2 as cv
 import numpy as np
 
 class Recognizer():
@@ -22,8 +22,8 @@ class Recognizer():
             )
 
     @classmethod
-    def read_image(self, image_path):
-        """reads image file from path and returns cv2 image object
+    def read_image(self, image_path, grayscale=False):
+        """reads image file from path and returns cv image object
 
         Parameters
         ----------
@@ -32,14 +32,17 @@ class Recognizer():
 
         Returns
         -------
-        cv2.Image
+        cv.Image
             OpenCV image object
         """
-        return cv2.imread(image_path)
+        if grayscale:
+            return cv.imread(image_path, cv.IMREAD_GRAYSCALE)
+        else:
+            return cv.imread(image_path)
     
     @classmethod
     def read_video_file(self, video_path):
-        """Returns a video capture object of cv2
+        """Returns a video capture object of cv
 
         Parameters
         ----------
@@ -48,17 +51,17 @@ class Recognizer():
 
         Returns
         -------
-        cv2.VideoCapture
-            Video capture object of cv2
+        cv.VideoCapture
+            Video capture object of cv
         """
-        return cv2.VideoCapture(video_path)
+        return cv.VideoCapture(video_path)
 
     def read_text_from_image(self, image):
         """reads text from image
 
         Parameters
         ----------
-        image : cv2.Image
+        image : cv.Image
             OpenCv image object with text
 
         Returns
@@ -66,7 +69,7 @@ class Recognizer():
         results : dict
             Dict of recognized text, bounding box co-ordinates and probability
             
-        image : cv2.image
+        image : cv.image
             Image with bounding boxes
         """
         results = self.reader.readtext(image)
@@ -75,8 +78,8 @@ class Recognizer():
             (top_left, top_right, bottom_right, bottom_left) = bbox
             top_left = tuple(map(int, top_left))
             bottom_right = tuple(map(int, bottom_right))
-            cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
-            cv2.putText(image, text, top_left, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+            cv.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
+            cv.putText(image, text, top_left, cv.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
         return results, image
 
@@ -93,7 +96,7 @@ class Recognizer():
         results : dict
             Dict of recognized text, bounding box co-ordinates and probability
 
-        image : cv2.image
+        image : cv.image
             Image with bounding boxes
         """
         return self.read_text_from_image(
@@ -105,7 +108,7 @@ class Recognizer():
 
         Parameters
         ----------
-        video_capture : cv2.VideoCapture
+        video_capture : cv.VideoCapture
             Filepath to video with text
 
         Returns
@@ -132,19 +135,19 @@ class Recognizer():
                     bottom_right = tuple(map(int, bottom_right))
 
                     # Draw bounding box and text on the frame
-                    cv2.rectangle(frame, top_left, bottom_right, (0, 255, 0), 2)
-                    cv2.putText(frame, text, top_left, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+                    cv.rectangle(frame, top_left, bottom_right, (0, 255, 0), 2)
+                    cv.putText(frame, text, top_left, cv.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
 
             # Display the resulting frame
-            cv2.imshow('Video', frame)
+            cv.imshow('Video', frame)
 
             # Break the loop if 'q' key is pressed
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv.waitKey(1) & 0xFF == ord('q'):
                 break
 
         # Release the video capture object and close all windows
         video_capture.release()
-        cv2.destroyAllWindows()
+        cv.destroyAllWindows()
 
         return results
     
@@ -165,26 +168,65 @@ class Recognizer():
         return self.read_text_in_video_capture(
             video_capture=Recognizer.read_video_file(video_filepath)
         )
+        
+    def shape_detection(self, image, template, method="cv.TM_CCOEFF"):
+        img = image.copy()
+        w, h = template.shape[::-1]
+        result = cv.matchTemplate(img, template, eval(method))
+        min_val, max_val, min_loc, max_loc = cv.minMaxLoc(result)
+        
+        # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
+        if method in [cv.TM_SQDIFF, cv.TM_SQDIFF_NORMED]:
+            top_left = min_loc
+        else:
+            top_left = max_loc
+        bottom_right = (top_left[0] + w, top_left[1] + h)
+        cv.rectangle(img, top_left, bottom_right, 255, 2)
+        
+        return result, img
 
 if __name__=="__main__":
 
     recog = Recognizer()
 
     # Test: image
-    image_path = 'input_files/image.jpg'
-    results, image = recog.read_text_from_image_file(image_path)
+    # image_path = 'input_files/image.jpg'
+    # results, image = recog.read_text_from_image_file(image_path)
 
-    plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-    plt.axis('off')
-    plt.show()
+    # plt.imshow(cv.cvtColor(image, cv.COLOR_BGR2RGB))
+    # plt.axis('off')
+    # plt.show()
 
-    # Print the recognized text
-    for (bbox, text, prob) in results:
-        print(f"Text: {text}, Probability: {prob:.2f}")
+    # # Print the recognized text
+    # for (bbox, text, prob) in results:
+    #     print(f"Text: {text}, Probability: {prob:.2f}")
 
     # Test: video
     # video_path = "input_files/video1.mp4"
     # results = recog.read_text_from_video_file(video_path)
     
+    
+    # Test: Template matching
+    image_path = 'input_files/image.jpg'
+    template_path = 'input_files/arrow_temp.jpg'
+    
+    methods = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
+            'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
+    
+    for meth in methods:
+        method = meth
+        # Apply template Matching
+        result, image = recog.shape_detection(
+            image=Recognizer.read_image(image_path, grayscale=True),
+            template=Recognizer.read_image(template_path, grayscale=True),
+            method=method
+        )
+
+        plt.subplot(121),plt.imshow(result, cmap='gray')
+        plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
+        plt.subplot(122),plt.imshow(image, cmap='gray')
+        plt.title('Detected Point'), plt.xticks([]), plt.yticks([])
+        plt.suptitle(meth)
+        plt.show()
     
     
